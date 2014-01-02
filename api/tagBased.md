@@ -1,15 +1,15 @@
 Summary
 =======
 
-Just few scripts that will make you life easier ...
+Simple program which loops the describe ec2 API seeking for key:value pair and act upon: stop/terminate in addition will send SNS Messages to pre-defined topic
 
 Name
 ====
-Tag Based
+tagBased.sh
 
 Goal
 ====
-Stop or Terminate EC2 resources based on key:value Tag Pair , currently only support instance as resource type
+Stop or Terminate EC2 resources based on key:value Tag Pair , currently only support instance as resource type , future will also suppot EBS volumes
 
 PreReq
 ======
