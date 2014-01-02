@@ -19,17 +19,12 @@ PreReq
 
 Usage
 =====
-$ usage: ./tagBased.sh -t ResourceType (instance / volume)  -a APIToExecute (Stop/Terminate) -k (TagKeyName) -v (TagValue) -s [SNSTopicARN-NAME]
-$
-$ This script will Filter Tags based on resource type and then will loop all tag key:value pairs , based on a condition will perform API Operations (Currently Supports Only Terminate and Run Instances API)
-$
-$ OPTIONS:
-
-$   -t      Mandatory: Resource Type, Currently only "instance" is supported!
-$   -a      Mandatory: API To execute aginst the instance Stop/Terminate
-$   -k      Mandatory: The Tag Key Name
-$   -v      Mandatory: The Tag Value
-$   -s      OPTIONAL:  SNSARNTopicName
-$
-$
-$ describe-tags with Filter --> Sort --> Loop based on specific Tag --> Perform Action Based On Tag Name  --> Send message to SNS Topic
+	$ usage: ./tagBased.sh -t ResourceType (instance / volume)  -a APIToExecute (Stop/Terminate) -k (TagKeyName) -v (TagValue) -s [SNSTopicARN-NAME]
+	$ This script will Filter Tags based on resource type and then will loop all tag key:value pairs , based on a condition will perform API Operations (Currently Supports Only Terminate and Run Instances API)
+	$ OPTIONS:
+	$   -t      Mandatory: Resource Type, Currently only "instance" is supported!
+	$   -a      Mandatory: API To execute aginst the instance Stop/Terminate
+	$   -k      Mandatory: The Tag Key Name
+	$   -v      Mandatory: The Tag Value
+	$   -s      OPTIONAL:  SNSARNTopicName
+	$ describe-tags with Filter --> Sort --> Loop based on specific Tag --> Perform Action Based On Tag Name  --> Send message to SNS Topic
