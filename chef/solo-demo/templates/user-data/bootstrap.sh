@@ -7,7 +7,7 @@
 # - Check if wget/curl return 0 bytes file and report that!
 ######################
 REPO="https://s3.amazonaws.com/kiputch-solo"
-CONFIG="/etc/solo-aws-config.conf"
+#CONFIG="/etc/solo-aws-config.conf"
 SOLOBOOT="others/install.sh"
 SOLOROLES="roles/roles.tar.gz"
 SOLOSCRIPT="install.sh"
@@ -15,18 +15,6 @@ LOCAL="/usr/local/bootstrap"
 LOG="/var/log/bootstrap.log"
 SOLOLOG="/var/log/chef-solo-install.sh.log"
 #############################
-if [ ! -f "$CONFIG" ];then
-  echo "ERROR: Config file was not found, exiting..."
-  exit 1
-else
-  ID=`cat $CONFIG | grep json_attribs|awk 'BEGIN { FS=":" };{ print $2 }'`
-   if [ -z $ID ];then
-     error_n_exit "Could not get the instnace ID"
-   else
-   SOLORB="solorb/solo.rb_${ID}"
-   fi
-fi
-#Functions
 exists() {
   if command -v $1 >/dev/null 2>&1
   then
@@ -35,6 +23,18 @@ exists() {
     return 1
   fi
 }
+#Get Instance ID...
+exists "wget"
+if [ "$?" == "1" ];then
+  error_n_exit "WGET was not Found on this system"
+fi
+ID=$(wget -q -O- http://169.254.169.254/latest/meta-data/instance-id)
+   if [ -z $ID ];then
+     error_n_exit "Could not get the instnace ID"
+   else
+   SOLORB="solorb/solo.rb_${ID}"
+   fi
+#Functions
 error_n_exit()
 {
 
@@ -96,15 +96,8 @@ if [ "$?" == "0" ];then
   cd /var/chef-solo/roles/ || error_n_exit "could not change dir to roles"
   tar xvfz roles.tar.gz    || error_n_exit "could not extract roles.tar.gz"
 elif [ "$?" == "1" ];then 
-  exists "curl"
-    if [ "$?" == "0" ];then
-      do_curl "$REPO/$SOLOBOOT" "$LOCAL/$SOLOSCRIPT"
-      do_curl "$REPO/$SOLORB" "/etc/chef/solo.rb"
-      do_curl "$REPO/$SOLOROLES" "/var/chef-solo/roles/roles.tar.gz"
-      /usr/bin/cd /var/chef-solo/roles/ || error_n_exit "could not change dir to roles"
-      /use/bin/tar xvfz roles.tar.gz    || error_n_exit "could not extract roles.tar.gz"
-    fi 
-fi
+  error_n_exit "Must have WGET Installed!"
+fi 
 
     chmod +x $LOCAL/$SOLOSCRIPT || error_n_exit "Could not set +x to to $LOCAL/$SOLOSCRIPT"
     source $LOCAL/$SOLOSCRIPT 2>&1 >> $SOLOLOG
@@ -113,5 +106,20 @@ fi
      else
       error_n_exit "Chef-solo failed to install, check $SOLOLOG for more info"
      fi
+#
+mkdir -p /usr/local/scripts
+### Lets set the cron job that will execute chef-solo every 20 minutes
+wget -O "/usr/local/scripts/solocron.sh" "$REPO/others/solocron.sh"
+chmod +x "/usr/local/scripts/solocron.sh"
+##Setup the cronjob
+echo "*/20 * * * *   /usr/local/scripts/solocron.sh" >> /tmp/solocrontab
+#Enable the cron
+crontab /tmp/solocrontab
+rm -f /tmp/solocrontab
+### lets end by setting permissions
+chown root.root "/etc/chef" -R
+chown root.root "/usr/local/scripts" -R
+chown root.root "/var/chef-solo" -R
+#end
 #
 exit 0
