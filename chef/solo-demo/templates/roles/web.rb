@@ -1,3 +1,3 @@
 name 'web'
-description 'All Instances'
-run_list 'recipe[apache2::default]'
+description 'Generic Web Server'
+run_list "recipe[apache2::default]"

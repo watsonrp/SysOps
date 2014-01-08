@@ -1,20 +1,26 @@
 #!/bin/bash
 #Chef-Solo BootStrap Script , this is the script that will be executed on first run it will:
 # - Install chef-solo to the lastest version using opscode bash script
-# - Create a cron job that will execute chef-solo every 30 min
-# lets install chef-solo
+# - Create a cron job that will execute chef-solo every 20 min
 #####TO DO######
 # - Check if wget/curl return 0 bytes file and report that!
+#
+#Version 0.1 - Initial
+#Version 0.2 - Added AWS Python CLI installation so I can make secure calls to S3
+#Version 0.3 - Replaced wget/curl with aws s3 cli tool
 ######################
-REPO="https://s3.amazonaws.com/kiputch-solo"
-#CONFIG="/etc/solo-aws-config.conf"
+BUCKET="kiputch-solo"
+REGION="us-east-1"
 SOLOBOOT="others/install.sh"
 SOLOROLES="roles/roles.tar.gz"
+SOLOCOOKBOOKS="cookbook/solo-all.tar.gz"
 SOLOSCRIPT="install.sh"
 LOCAL="/usr/local/bootstrap"
 LOG="/var/log/bootstrap.log"
 SOLOLOG="/var/log/chef-solo-install.sh.log"
-#############################
+##############################################################
+#Please change the vars: bucket , region to match your setup!
+##############################################################
 exists() {
   if command -v $1 >/dev/null 2>&1
   then
@@ -33,6 +39,7 @@ ID=$(wget -q -O- http://169.254.169.254/latest/meta-data/instance-id)
      error_n_exit "Could not get the instnace ID"
    else
    SOLORB="solorb/solo.rb_${ID}"
+   NODEJSON="nodejson/${ID}.json"
    fi
 #Functions
 error_n_exit()
@@ -56,30 +63,18 @@ else
   return 1
 fi
 }
-do_wget() 
-{
-  echo "trying wget..."
-  wget -O "$1" "$2" 2>/tmp/stderr
+
+#Install Python CLI
+cat /etc/issue | grep -w Ubuntu
+if [ "$?" == 0 ];then 
+  apt-get install -y python-pip 2>/tmp/pipout
   rc=$?
-  if [ "$rc" != "0" ]; then
-    error_n_exit "WGET returned ERROR check $LOG for full stacktrace"
-  fi 
-  return 0
-}
-
-# do_curl URL FILENAME
-do_curl() 
-{
-  echo "trying curl..."
-  curl -sL -D /tmp/stderr "$1" > "$2"
-  rc=$?
-
-   if [ "$rc" != "0" ]; then
-    error_n_exit "CURL returned ERROR check $LOG for full stacktrace"
-   fi
-
-  return 0
-}
+  pip install awscli 2>>/tmp/pipout
+  rc2=$?
+    if [[ $rc != "0" ]] || [[ $rc2 != "0" ]];then
+      error_n_exit "Could not install AWS CLI Tools check /tmp/stderr for more info!"
+    fi
+fi
 #Create Folders
 create_folders
  if [ "$?" != "0" ];then
@@ -88,16 +83,17 @@ create_folders
    ok_n_cont "Created Folders"
  fi
 #Get Chef-Solo Install Script , Chef-Solo generated configuration files
-exists "wget"
-if [ "$?" == "0" ];then
-  do_wget "$LOCAL/$SOLOSCRIPT" "$REPO/$SOLOBOOT"
-  do_wget "/etc/chef/solo.rb" "$REPO/$SOLORB"
-  do_wget "/var/chef-solo/roles/roles.tar.gz" "$REPO/$SOLOROLES"
+##
+###Copy the chef-solo install.sh master script
+aws s3 --region $REGION cp s3://$BUCKET/$SOLOBOOT "$LOCAL/$SOLOSCRIPT" 2>>/tmp/s3out
+aws s3 --region $REGION cp s3://$BUCKET/$SOLORB "/etc/chef/solo.rb" 2>>/tmp/s3out
+aws s3 --region $REGION cp s3://$BUCKET/$NODEJSON "/etc/chef/" 2>>/tmp/s3out
+aws s3 --region $REGION cp s3://$BUCKET/$SOLOROLES "/var/chef-solo/roles/roles.tar.gz" 2>>/tmp/s3out
   cd /var/chef-solo/roles/ || error_n_exit "could not change dir to roles"
-  tar xvfz roles.tar.gz    || error_n_exit "could not extract roles.tar.gz"
-elif [ "$?" == "1" ];then 
-  error_n_exit "Must have WGET Installed!"
-fi 
+  tar xfz roles.tar.gz || error_n_exit "could not extract roles.tar.gz"
+aws s3 --region $REGION cp s3://$BUCKET/$SOLOCOOKBOOKS "/var/chef-solo/cache/cookbooks" 2>>/tmp/s3out
+  cd /var/chef-solo/cache/cookbooks && tar xfz solo-all.tar.gz || error_n_exit "could not extract solo-all.tar.gz"
+#Lets call OpsCode Chef-solo master install script , this will install chef-solo (omnibus)
 
     chmod +x $LOCAL/$SOLOSCRIPT || error_n_exit "Could not set +x to to $LOCAL/$SOLOSCRIPT"
     source $LOCAL/$SOLOSCRIPT 2>&1 >> $SOLOLOG
@@ -106,10 +102,10 @@ fi
      else
       error_n_exit "Chef-solo failed to install, check $SOLOLOG for more info"
      fi
-#
+#Creating cron
 mkdir -p /usr/local/scripts
 ### Lets set the cron job that will execute chef-solo every 20 minutes
-wget -O "/usr/local/scripts/solocron.sh" "$REPO/others/solocron.sh"
+aws s3 --region $REGION cp s3://$BUCKET/others/solocron.sh "/usr/local/scripts/solocron.sh"
 chmod +x "/usr/local/scripts/solocron.sh"
 ##Setup the cronjob
 echo "*/20 * * * *   /usr/local/scripts/solocron.sh" >> /tmp/solocrontab
@@ -120,6 +116,8 @@ rm -f /tmp/solocrontab
 chown root.root "/etc/chef" -R
 chown root.root "/usr/local/scripts" -R
 chown root.root "/var/chef-solo" -R
+## Execute first chef-solo run ....
+/usr/bin/chef-solo -L /var/log/solorun.log
 #end
 #
 exit 0
