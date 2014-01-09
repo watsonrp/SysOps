@@ -75,7 +75,7 @@ This process is not short :-) , but most of the time should only done once and b
 
 - Create an S3 Bucket with your favourite name, create the below structure and copy the files from s3-solo.tar.gz to the appropriate "Folders":
 
-MyBucket---
+```MyBucket---
           |--cookbook
                     |--solo-all.tar.gz
                     |--solo-all.tar.gz.md5   (Just create an md5 of the solo-all.tar.gz file and echo it into this file)
@@ -88,7 +88,7 @@ MyBucket---
           |--roles
                  |--roles.tar.gz 
                  |--roles.tar.gz.md5 (Just create an md5 of the roles.tar.gz file and echo it into this file)
-
+```
 - All bucket Objects needs to be private, except the others "Folder" , Grant Public Access to the others folder and its content , so when you upload new versions
   Of the scripts make sure to make the, publicly available
 
