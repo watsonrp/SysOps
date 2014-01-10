@@ -33,12 +33,10 @@ Per Component Requirement
   The Instance Profile Arn will be used as an Argument on the Bootstrapping Process 
 
 *Chef-solo*
-===========
 
 * No Special Requirements, We use OpsCode's Generic Platform Independed bootstrap script
 
-S3 Bucket 
-=========
+*S3 Bucket*
 
 * Generic S3 Bucket, Can reside in any region
 * Pre-Defined Hierarchy (See Installation Instructions) 
