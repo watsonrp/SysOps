@@ -6,7 +6,7 @@
 #md5sum print $4 awk was changed to support my md5 mac osx output , NEED to change ubuntu style! , which is print $1!
 #######################
 # Yet another script to start aws instance but this time integrates into chef-solo!
-BUCKET="kiputch-solo"
+BUCKET="EnterYourBucketName!"
 ##Functions
 function error_exit()
 {
@@ -32,6 +32,8 @@ cat << EOF
 usage: $0 -a AMI-ID -s securityGroupIDs -k KeyPairName -i InstanceSize -n VPCsubnetID -m IAM-Instance-Profile(Arn=value) -r ChefRole 
 
 Currently ChefRole can be "base" or "web"
+
+Do not forget to setup the BUCKET Name by editing this script!
 
 EOF
 exit 1

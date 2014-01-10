@@ -107,6 +107,8 @@ This process is not short :-) , but most of the time should only done once and b
 - Copy aws-solo.tar.gz to /srv/bootstrap and extract it , make sure that all script are +x :-)
 - Change dir to : s3 and upload the files to the s3 bucket (see above paths) , do not forget to create md5 for solo-all.tar.gz & roles.tar.gz
 - Make sure that the S3 "Folder" and all its object are publicly accessible 
+- Edit the newInstance.sh and input your bucket name
+- Edit bootstrap.sh and input your bucket name and region
 
 *Step 4 - Launch An Instance*
 

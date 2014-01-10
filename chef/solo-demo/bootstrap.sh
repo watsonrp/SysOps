@@ -9,8 +9,8 @@
 #Version 0.2 - Added AWS Python CLI installation so I can make secure calls to S3
 #Version 0.3 - Replaced wget/curl with aws s3 cli tool
 ######################
-BUCKET="kiputch-solo"
-REGION="us-east-1"
+BUCKET="EnterYourBucketName!"
+REGION="EnterYourRegion!"
 SOLOBOOT="others/install.sh"
 SOLOROLES="roles/roles.tar.gz"
 SOLOCOOKBOOKS="cookbook/solo-all.tar.gz"
