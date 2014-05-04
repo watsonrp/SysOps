@@ -8,6 +8,7 @@
 #Version 0.1 - Initial
 #Version 0.2 - Added AWS Python CLI installation so I can make secure calls to S3
 #Version 0.3 - Replaced wget/curl with aws s3 cli tool
+#Version 0.4 - Due due apt failures added apt-get -y update
 ######################
 BUCKET="EnterYourBucketName!"
 REGION="EnterYourRegion!"
@@ -116,6 +117,8 @@ rm -f /tmp/solocrontab
 chown root.root "/etc/chef" -R
 chown root.root "/usr/local/scripts" -R
 chown root.root "/var/chef-solo" -R
+#Lets execute apt-get -y update
+apt-get -y update
 ## Execute first chef-solo run ....
 /usr/bin/chef-solo -L /var/log/solorun.log
 #end
