@@ -6,15 +6,16 @@ more info here: http://docs.aws.amazon.com/AmazonCloudWatch/latest/DeveloperGuid
 Custom Metrics costs can be high , to try and save costs customer can sample few business data points and aggregate them on the client side
 Then Publish them as "Already Aggregated Data Points" for example Say you need to sample the performance of your webapp which consists of 
 3,4 Counters such as : Average Time to Load the Page , Average Database Access ... you could simply get those counters and perform 1st level
-Aggregation which consists on sum/average/min/max then publish it to cloudwatch aa Single Metric per instance (Using instanceID as dimension
+Aggregation which consists on sum/average/min/max then publish it to cloudwatch as Single Metric per instance (Using instanceID as dimension
 
-That's about it see you next time Trainers! 
+That is about it see you next time Trainers! 
 
 To test it just:
 
 - Spin up your favorite nix flavour (I Use ubuntu)
 - You will need the aws cli tools installed (for ubuntu you need to install it)
 - You will need an IAM Role and a policy to allow the ec2 instance to post the metrics , the below will do the trick
+```
   {
   "Version": "2012-10-17",
   "Statement": [
@@ -33,6 +34,7 @@ To test it just:
     }
   ]
 }
+```
 - Install the sysstat binary, apt-get install sysstat , yum install sysstat
 - create a crontab from the ubuntu/ec2-user and execute the script every 1/5 whatever minutes you wish
 
