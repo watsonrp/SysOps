@@ -10,7 +10,7 @@
   #The below sysstat is just a POC of gathering and "Agregating metrics" which can be sent to cloudwatch already Aggregated 
   #Of course in real prod scenarion you would proably pull multiple counters here and then perfrom your own math... 
   cswch=`sar 1 5 -w | grep Average | awk '{ print $3 }'`
-  /usr/bin/aws cloudwatch put-metric-data --metric-name ContextSwitchesPerSecAvg --namespace "System/Linux" --statistic-value Sum=0,Minimum=0,Maximum=${cswch},SampleCount=5 --dimensions "InstanceId=${IP}" --region eu-west-1
+  /usr/bin/aws cloudwatch put-metric-data --metric-name ContextSwitchesPerSecAvg --namespace "System/Linux" --statistic-value Sum=${cswch},Minimum=${cswch},Maximum=${cswch},SampleCount=5 --dimensions "InstanceId=${IP}" --region eu-west-1
 
 
     if [ "$?" != "0" ];then
