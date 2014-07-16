@@ -90,6 +90,8 @@ This process is not short :-) , but most of the time should only done once and b
 - All bucket Objects needs to be private, except the others "Folder" , Grant Public Access to the others folder and its content , so when you upload new versions
   Of the scripts make sure to make the, publicly available
 
+- Download the chef client install script:  https://www.opscode.com/chef/install.sh and copy it to other/install , make the script public accesible
+
 *Step 2 - IAM*
 
 - Create an IAM role and attach a policy that allows s3 read access to objects in: MyBucket (see s3-generic-instance-role.policy) as an example
