@@ -97,8 +97,15 @@ This process is not short :-) , but most of the time should only done once and b
 - Create an IAM role and attach a policy that allows s3 read access to the objects in MyBucket (see s3-generic-instance-role.policy) , We will assosiacte
   This role with an Instance Profile , The Bootstrapped instance will be attached with the instance profile
 - Create an IAM Instance Profile and add the above created Role to the instance profile, Records its ARN, you will need it as an Argument for the newInstance.sh program
-  Example Creating the Instance Profile:  aws iam create-instance-profile --instance-profile-name s3-myBucket-access
-  Example Assosiating the Role with the Instance Profile: aws iam add-role-to-instance-profile --instance-profile-name s3-myBucket-access --role-name myBucket-iam-role
+
+  Example Creating the Instance Profile:
+
+  ```aws iam create-instance-profile --instance-profile-name s3-myBucket-access```
+
+  Example Assosiating the Role with the Instance Profile:
+
+  ```aws iam add-role-to-instance-profile --instance-profile-name s3-myBucket-access --role-name myBucket-iam-role```
+
 - Needless to say that your admin instance needs read/write access to this bucket as well, so if you need to create a dedicated role and a policy for it
   now its the time to do it
 
