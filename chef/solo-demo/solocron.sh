@@ -1,7 +1,7 @@
 #!/bin/bash
 #Will be executed by crontab every 20 min, chef is solo :-(
-BUCKET="kiputch-solo"
-REGION="us-east-1"
+BUCKET="YOUR-S3-Bucket!"
+REGION="Your-REGION"
 ROLES="roles/roles.tar.gz"
 COOKBOOKS="cookbook/solo-all.tar.gz"
 ######################################

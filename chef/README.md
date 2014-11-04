@@ -27,7 +27,7 @@ Per Component Requirement
 
 *Generic EC2 Instance*
 
-* Ubuntu, was not tested on other Linux Platform but can surely fitted into ones ...
+* Supported AMI: Ubuntu 14.04 , was not tested on other Linux Platform but can surely fitted into ones ...
 * Instance Profile-->IAM Role - an IAM Role that allows the Generic EC2 Instance to do Authenticated API calls to the S3 Bucket in order to retrieve Configurations that
   Were Created by the Admin Instance (See Installation Instruction on how-to create) , the Role must be created manually and be assigned to an Instance-Profile ,
   The Instance Profile Arn will be used as an Argument on the Bootstrapping Process 
@@ -71,7 +71,7 @@ This process is not short :-) , but most of the time should only done once and b
 
 *step 1 - S3*
 
-- Create an S3 Bucket with your favourite name, create the below structure and copy the files from s3-solo.tar.gz to the appropriate "Folders":
+- Create an S3 Bucket with your favourite name, create the below structure and copy the files from the repo root and the s3 folder  to the appropriate s3 prefix below:
 
 ```MyBucket---
           |--cookbook
@@ -94,23 +94,33 @@ This process is not short :-) , but most of the time should only done once and b
 
 *Step 2 - IAM*
 
-- Create an IAM role and attach a policy that allows s3 read access to objects in: MyBucket (see s3-generic-instance-role.policy) as an example
-- Create an IAM Instance Profile and add the just created Role to the instance profile, Records its Arn, you will need it as an Argument for the newInstance.sh program
+- Create an IAM role and attach a policy that allows s3 read access to the objects in MyBucket (see s3-generic-instance-role.policy) , We will assosiacte
+  This role with an Instance Profile , The Bootstrapped instance will be attached with the instance profile
+- Create an IAM Instance Profile and add the above created Role to the instance profile, Records its ARN, you will need it as an Argument for the newInstance.sh program
+  Example Creating the Instance Profile:  aws iam create-instance-profile --instance-profile-name s3-myBucket-access
+  Example Assosiating the Role with the Instance Profile: aws iam add-role-to-instance-profile --instance-profile-name s3-myBucket-access --role-name myBucket-iam-role
 - Needless to say that your admin instance needs read/write access to this bucket as well, so if you need to create a dedicated role and a policy for it
-  now its the time to do it , you might also decide to use s3 bucket policy based on specific public IP Address and save the IAM role (up to you)
+  now its the time to do it
 
 *Step 3 - Admin Instance*
 
 - Launch an ubuntu EC2 AMI (Generic one), I would choose m1.small for this purpose, MAKE SURE To ASSOCIATE the instance with the appropriated IAM ROLE to enable S3 Read/Write 
   Access to the S3 MyBucket
-- Create: /srv/bootstrap 
-- Copy aws-solo.tar.gz to /srv/bootstrap and extract it , make sure that all script are +x :-)
-- Change dir to : s3 and upload the files to the s3 bucket (see above paths) , do not forget to create md5 for solo-all.tar.gz & roles.tar.gz
-- Make sure that the S3 "Folder" and all its object are publicly accessible 
-- Edit the newInstance.sh and input your bucket name
-- Edit bootstrap.sh and input your bucket name and region
+- Install aws cli :  apt-get update && apt-get install -y python-pip && pip install awscli
+- Configure default region (where the s3 bucket lives) , aws configure 
+- Create: /srv/bootstrap  , /srv/bootstrap/nodejson , /srv/bootstrap/solorb
+- Copy newInstance.sh,user-data.sh,solo.rb,base.json,web.json to /srv/bootstrap , Make sure that all scripts are +x :-)
+- Edit the newInstance.sh and replace the default bucket name with your bucket name
+- Edit the user-data.sh and replace the default bucket name with your bucket name
+- Download bootstrap.sh and replace the default bucket name with your bucket name as well as the REGION that your s3 bucket lives in 
+- RE: Upload boostrap.sh to the s3 bucket into others/bootstrap.sh , make the file PUBLIC
+- Download solocron.sh and replace the default bucket name with your bucket name as well as the REGION that your s3 bucket lives in
+- RE: Upload boostrap.sh to the s3 bucket into others/solocron.sh
 
 *Step 4 - Launch An Instance*
+
+****Important: I assume that you launch the instance into a pre-existing VPC , into a valid existing PUBLIC SUBNET that automatically assigned public IP
+               to the newly launched instances****
 
 - Change dir to /srv/bootstrap
 - Execute the newInstance.sh , provide all the needed arguments , for the chef role currently only base and web are supported try them both !
