@@ -22,7 +22,7 @@ Per Component Requirement
 * Ubuntu (Might also work with Linux AMI did not test it)
 * AWS python CLI Tools version 1.2.9 (latest to the time this README is written)
 * AWS Python CLI Access Key/Secret Key Configuration at ~/.aws/config , with policy permission that is able (At min) to: Start new instances , Describe new instances 
-  S3 Put-Objects/Get-Objects to the S3 Bucket that will hold the chef-solo configurations
+  S3 Put-Objects/Get-Objects to the S3 Bucket that will hold the chef-solo configurations, IAM Role is always better and secured!
 * Public Access - Since we make calls to S3 we need Internet Access , NAT , Or Public IP ... Your Choice :-)
 
 *Generic EC2 Instance*
@@ -69,32 +69,11 @@ Installation Instructions
 
 This process is not short :-) , but most of the time should only done once and be tweaked as needed
 
-*step 1 - S3*
+*Step 1 - IAM*
 
-- Create an S3 Bucket with your favourite name, create the below structure and copy the files from the repo root and the s3 folder  to the appropriate s3 prefix below:
+IAM Role - Bootstrapped Instance
 
-```MyBucket---
-          |--cookbook
-                    |--solo-all.tar.gz
-                    |--solo-all.tar.gz.md5   (Just create an md5 of the solo-all.tar.gz file and echo it into this file)
-          |--others
-                  |--install.sh
-                  |--bootstrap.sh
-                  |--solocron.sh
-          |--solorb
-          |--nodejson
-          |--roles
-                 |--roles.tar.gz 
-                 |--roles.tar.gz.md5 (Just create an md5 of the roles.tar.gz file and echo it into this file)
-```
-- All bucket Objects needs to be private, except the others "Folder" , Grant Public Access to the others folder and its content , so when you upload new versions
-  Of the scripts make sure to make the, publicly available
-
-- Download the chef client install script:  https://www.opscode.com/chef/install.sh and copy it to others/install , make the script public accesible
-
-*Step 2 - IAM*
-
-- Create an IAM role and attach a policy that allows s3 read access to the objects in MyBucket (see s3-generic-instance-role.policy) , We will assosiacte
+- Create an IAM role and attach a policy that allows s3 read access to the objects in MyBucket (see s3-generic-instance-role.policy) , We will associate
   This role with an Instance Profile , The Bootstrapped instance will be attached with the instance profile
 - Create an IAM Instance Profile and add the above created Role to the instance profile, Records its ARN, you will need it as an Argument for the newInstance.sh program
 
@@ -105,24 +84,46 @@ This process is not short :-) , but most of the time should only done once and b
   Example Assosiating the Role with the Instance Profile:
 
   ```aws iam add-role-to-instance-profile --instance-profile-name s3-myBucket-access --role-name myBucket-iam-role```
+  
+IAM Role - Admin Instance
 
-- Needless to say that your admin instance needs read/write access to this bucket as well, so if you need to create a dedicated role and a policy for it
-  now its the time to do it
+- Needless to say that your admin instance needs read/write access to this bucket and permission to launch new instances (see Per Component Requirement)
 
-*Step 3 - Admin Instance*
+*Step 2 - Admin Instance*
 
-- Launch an ubuntu EC2 AMI (Generic one), I would choose m1.small for this purpose, MAKE SURE To ASSOCIATE the instance with the appropriated IAM ROLE to enable S3 Read/Write 
-  Access to the S3 MyBucket
-- Install aws cli :  apt-get update && apt-get install -y python-pip && pip install awscli
+- Launch an ubuntu EC2 AMI (Generic one), I would choose m3.medium for this purpose, MAKE SURE To ASSOCIATE the instance with the appropriated IAM ROLE
+  That is if you decided to use IAM Role for the admin instance permissions
+- SSH To the instance : Install aws cli :  apt-get update && apt-get install -y python-pip && pip install awscli
 - Configure default region (where the s3 bucket lives) , aws configure 
-- Create: /srv/bootstrap  , /srv/bootstrap/nodejson , /srv/bootstrap/solorb
-- Copy newInstance.sh,user-data.sh,solo.rb,base.json,web.json to /srv/bootstrap , Make sure that all scripts are +x :-)
+- Create: /srv/bootstrap
+- From Github project root :  Download admin-instance.tar.gz to /srv/boostrap , extract the file: tar -xvfz admin-instance.tar.gz
 - Edit the newInstance.sh and replace the default bucket name with your bucket name
-- Edit the user-data.sh and replace the default bucket name with your bucket name
-- Download bootstrap.sh and replace the default bucket name with your bucket name as well as the REGION that your s3 bucket lives in 
-- RE: Upload boostrap.sh to the s3 bucket into others/bootstrap.sh , make the file PUBLIC
-- Download solocron.sh and replace the default bucket name with your bucket name as well as the REGION that your s3 bucket lives in
-- RE: Upload boostrap.sh to the s3 bucket into others/solocron.sh
+- Edit user-data.sh and replace the default bucket name with your bucket name
+- Edit bootstrap.sh and replace the default bucket name with your bucket name as well as the REGION that your s3 bucket lives in 
+- Edit solocron.sh and replace the default bucket name with your bucket name as well as the REGION that your s3 bucket lives in
+
+
+*step 3 - Create The Artifcats S3 Bucket*
+
+- Create an S3 Bucket with your favorite name, create the below structure and copy from the admin instance/github s3 folder to the appropriate paths:
+
+```MyBucket---
+          |--cookbook
+                    |--solo-all.tar.gz (To be taken as is from the github s3/ folder)
+                    |--solo-all.tar.gz.md5   (Just create an md5 of the solo-all.tar.gz file and echo it into a file)
+          |--others
+                  |--install.sh   (Download the latest from here: https://www.opscode.com/chef/install.sh)
+                  |--bootstrap.sh (Upload from the admin instance *After Modifying the Bucket name & Region)
+                  |--solocron.sh (Upload from the admin instance *After Modifying the Bucket name & Region)
+          |--solorb  (Empty "Folder")
+          |--nodejson (Emtpy "Folder")
+          |--roles
+                 |--roles.tar.gz (To be taken as is from the github s3/ folder)
+                 |--roles.tar.gz.md5 (Just create an md5 of the roles.tar.gz file and echo it into a file)
+```
+- PERMISSIONS: All bucket Objects needs to be private, except the others "Folder" , Grant Public Access to all objects
+ 			   You could also use an IAM Resource Based Policy for this purpose
+
 
 *Step 4 - Launch An Instance*
 
@@ -130,7 +131,7 @@ This process is not short :-) , but most of the time should only done once and b
                to the newly launched instances****
 
 - Change dir to /srv/bootstrap
-- Execute the newInstance.sh , provide all the needed arguments , for the chef role currently only base and web are supported try them both !
+- Execute the newInstance.sh , provide all the needed arguments , for the chef role currently only base and web are supported!
 
 Usage:
 
@@ -140,9 +141,23 @@ Currently ChefRole can be "base" or "web"
 
 Example:
 
- /newInstance.sh -a ami-a53264cc -s xxxxxxxx -k xxxxxxxx -i t1.micro -n subnet-xxxxxxxx -m Arn=arn:aws:iam::xxxxxxxxxxxxxxxx:instance-profile/s3-chef-solo -r web
+Start an EC2 Instance and have chef deploy it as a webserver:
+
+ /newInstance.sh -a ami-423c0a5f -s xxxxxxxx -k xxxxxxxx -i m3.medium -n subnet-xxxxxxxx -m Arn=arn:aws:iam::xxxxxxxxxxxxxxxx:instance-profile/s3-chef-solo -r web
 
 - Login to the instance after a few minutes the chef-solo web role should have installed ntpd and apache2 automatically!
+
+Troubleshooting
+===============
+
+ The first step to troubleshoot is logs , I made sure that all the bootstrap process will be logged for any possible error:
+ 
+ - SSH login to the instance and examine the following logs in that order:
+   
+   /var/log/cloud-init-output ---> Very important log , the user-data execute stdout will be logged here so if for some reason
+   bootstrap.sh could not be downloaded from s3 the error will appear here
+   /var/log/bootstrap.log ---> If the bootstrap started this log will log errors or success 
+   /var/log/solorun.log ---> This logs means that chef-solo has executed , used to troubleshoot cookbook installation issues
 
 Author
 ======
