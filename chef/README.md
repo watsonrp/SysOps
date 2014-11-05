@@ -158,12 +158,12 @@ Troubleshooting
 
  The first step to troubleshoot is logs , I made sure that all the bootstrap process will be logged for any possible error:
  
- - SSH login to the instance and examine the following logs in that order:
+ SSH login to the instance and examine the following logs in that order:
    
-   /var/log/cloud-init-output ---> Very important log , the user-data execute stdout will be logged here so if for some reason
+ - /var/log/cloud-init-output ---> Very important log , the user-data execute stdout will be logged here so if for some reason
    bootstrap.sh could not be downloaded from s3 the error will appear here
-   /var/log/bootstrap.log ---> If the bootstrap started this log will log errors or success 
-   /var/log/solorun.log ---> This logs means that chef-solo has executed , used to troubleshoot cookbook installation issues
+ - /var/log/bootstrap.log ---> If the bootstrap started this log will log errors or success 
+ - /var/log/solorun.log ---> This logs means that chef-solo has executed , used to troubleshoot cookbook installation issues
 
 Author
 ======
