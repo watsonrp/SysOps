@@ -107,19 +107,21 @@ IAM Role - Admin Instance
 
 - Create an S3 Bucket with your favorite name, create the below structure and copy from the admin instance/github s3 folder to the appropriate paths:
 
+***Important Notice the S3 Bucket Must be Created @ the SAME REGION that you configured above!
+
 ```MyBucket---
           |--cookbook
                     |--solo-all.tar.gz (To be taken as is from the github s3/ folder)
-                    |--solo-all.tar.gz.md5   (Just create an md5 of the solo-all.tar.gz file and echo it into a file)
+                    |--solo-all.tar.gz.md5 (To be taken as is from the github s3/ folder)   
           |--others
                   |--install.sh   (Download the latest from here: https://www.opscode.com/chef/install.sh)
-                  |--bootstrap.sh (Upload from the admin instance *After Modifying the Bucket name & Region)
-                  |--solocron.sh (Upload from the admin instance *After Modifying the Bucket name & Region)
+                  |--bootstrap.sh (Upload from the admin instance *After Modifying the Bucket name & Region*
+                  |--solocron.sh (Upload from the admin instance *After Modifying the Bucket name & Region*
           |--solorb  (Empty "Folder")
           |--nodejson (Emtpy "Folder")
           |--roles
                  |--roles.tar.gz (To be taken as is from the github s3/ folder)
-                 |--roles.tar.gz.md5 (Just create an md5 of the roles.tar.gz file and echo it into a file)
+                 |--roles.tar.gz.md5 (To be taken as is from the github s3/ folder)
 ```
 - PERMISSIONS: All bucket Objects needs to be private, except the others "Folder" , Grant Public Access to all objects
  			   You could also use an IAM Resource Based Policy for this purpose
