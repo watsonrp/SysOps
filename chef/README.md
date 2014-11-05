@@ -70,6 +70,7 @@ Installation Instructions
 This process is not short :-) , but most of the time should only done once and be tweaked as needed
 
 *Step 1 - IAM*
+--------------
 
 IAM Role - Bootstrapped Instance
 
@@ -90,6 +91,7 @@ IAM Role - Admin Instance
 - Needless to say that your admin instance needs read/write access to this bucket and permission to launch new instances (see Per Component Requirement)
 
 *Step 2 - Admin Instance*
+-------------------------
 
 - Launch an ubuntu EC2 AMI (Generic one), I would choose m3.medium for this purpose, MAKE SURE To ASSOCIATE the instance with the appropriated IAM ROLE
   That is if you decided to use IAM Role for the admin instance permissions
@@ -104,6 +106,7 @@ IAM Role - Admin Instance
 
 
 *step 3 - Create The Artifcats S3 Bucket*
+-----------------------------------------
 
 - Create an S3 Bucket with your favorite name, create the below structure and copy from the admin instance/github s3 folder to the appropriate paths:
 
@@ -128,6 +131,7 @@ IAM Role - Admin Instance
 
 
 *Step 4 - Launch An Instance*
+-----------------------------
 
 ****Important: I assume that you launch the instance into a pre-existing VPC , into a valid existing PUBLIC SUBNET that automatically assigned public IP
                to the newly launched instances****
