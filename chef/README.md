@@ -24,13 +24,15 @@ Per Component Requirement
 * AWS Python CLI Access Key/Secret Key Configuration at ~/.aws/config , with policy permission that is able (At min) to: Start new instances , Describe new instances, 
   Pass IAM Role, S3 Put-Objects/Get-Objects to the S3 Bucket that will hold the chef-solo configurations, IAM Role is always better and more secured!
 * Public Access - Since we make calls to S3 we need Internet Access , NAT , Or Public IP ... Your Choice :-)
+* Security Group which will allow Incoming ssh access from your pre-defined IPs  
 
 *Generic EC2 Instance*
 
 * Supported AMI: Ubuntu 14.04 , was not tested on other Linux Platform but can surely fitted into ones ...
 * Instance Profile-->IAM Role - An IAM Role that allows the Generic EC2 Instance to do Authenticated API calls to the S3 Bucket in order to retrieve Configurations that
   Were Created by the Admin Instance (See Installation Instruction on how-to create) , the Role must be created manually and be assigned to an Instance-Profile ,
-  The Instance Profile Arn (Amazon Resource Name) will be used as an Argument for the Bootstrapping Process 
+  The Instance Profile Arn (Amazon Resource Name) will be used as an Argument for the Bootstrapping Process
+* Security Group which will allow Incoming ssh access from your pre-defined IPs, As Well as Allow Incoming http to browse the apache2 welcome page  
 
 *Chef-solo*
 
@@ -93,9 +95,9 @@ IAM Role - Admin Instance
 
 - Launch an ubuntu EC2 AMI (Generic one), I would choose m3.medium for this purpose, MAKE SURE To ASSOCIATE the instance with the appropriated IAM ROLE
   That is if you decided to use IAM Role for the admin instance permissions
-- SSH To the instance : Install aws cli :  apt-get update && apt-get install -y python-pip && pip install awscli
+- SSH To the instance : Install aws cli :  sudo -i  , apt-get update && apt-get install -y python-pip && pip install awscli
 - Configure aws cli tools, type: aws configure , provide ak/sk(if used) and the region where the bucket lives
-- Create: /srv/bootstrap
+- Create Boostrap folder: mkdir -p /srv/bootstrap
 - From Github project root :  Download admin-instance.tar.gz to /srv/bootstrap , extract the file: tar xvfz admin-instance.tar.gz
 - Edit the newInstance.sh and replace the default bucket name with your bucket name (Do not worry you will create the bucket on the next step)
 - Edit user-data.sh and replace the default bucket name with your bucket name
@@ -134,12 +136,13 @@ IAM Role - Admin Instance
 ****Important: I assume that you launch the instance into a pre-existing VPC , into a valid existing PUBLIC SUBNET that automatically assigned public IP
                to the newly launched instances****
 
+- On the admin instance
 - Change dir to /srv/bootstrap
 - Execute the newInstance.sh , provide all the needed arguments , for the chef role currently only base and web are supported!
 
 Usage:
 
-usage: ./newInstance.sh -a AMI-ID -s securityGroupIDs -k KeyPairName -i InstanceSize -n VPCsubnetID -m IAM-Instance-Profile(Arn=value) -r ChefRole
+usage: ./newInstance.sh -a AMI-ID -s securityGroupID -k KeyPairName -i InstanceSize -n VPCsubnetID -m IAM-Instance-Profile(Arn=value) -r ChefRole
 
 Currently ChefRole can be "base" or "web"
 
@@ -147,7 +150,7 @@ Example:
 
 Start an EC2 Instance and have chef deploy it as a webserver:
 
- /newInstance.sh -a ami-423c0a5f -s xxxxxxxx -k xxxxxxxx -i m3.medium -n subnet-xxxxxxxx -m Arn=arn:aws:iam::xxxxxxxxxxxxxxxx:instance-profile/s3-chef-solo -r web
+ /newInstance.sh -a ami-423c0a5f -s sg-xxxxxxxx -k xxxxxxxx -i m3.medium -n subnet-xxxxxxxx -m Arn=arn:aws:iam::xxxxxxxxxxxxxxxx:instance-profile/s3-chef-solo -r web
 
 - Login to the instance after a few minutes the chef-solo web role should have installed apache2 automatically!, browse to the ec2 instance public ip
 
@@ -156,11 +159,11 @@ Troubleshooting
 
  The first step to troubleshoot is logs , I made sure that all the bootstrap process will be logged for any possible error:
  
- SSH login to the instance and examine the following logs in that order:
+ SSH login to the bootstrapped instance and examine the following logs in that order:
    
  - /var/log/cloud-init-output ---> Very important log , the user-data execute stdout will be logged here so if for some reason
    bootstrap.sh could not be downloaded from s3 the error will appear here
- - /var/log/bootstrap.log ---> If the bootstrap started this log will log errors or success 
+ - /var/log/bootstrap.log ---> This script will install the chef-client ,create folders  , install AWS CLI...
  - /var/log/solorun.log ---> This logs means that chef-solo has executed , used to troubleshoot cookbook installation issues
 
 Author
