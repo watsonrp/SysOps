@@ -74,21 +74,13 @@ This process is not short :-) , but most of the time should only done once and t
 
 IAM Role - Bootstrapped Instance
 
-- Create an IAM role and attach a policy that allows s3 read access to the objects in MyBucket (see s3-generic-instance-role.policy) , We will associate
-  This role with an Instance Profile , The Bootstrapped instance will be attached with the instance profile
-- Create an IAM Instance Profile and add the above created Role to the instance profile, Records its ARN, you will need it as an Argument for the newInstance.sh program
-
-  Example Creating the Instance Profile:
-
-  ```aws iam create-instance-profile --instance-profile-name s3-myBucket-access```
-
-  Example Associating the Role with the Instance Profile:
-
-  ```aws iam add-role-to-instance-profile --instance-profile-name s3-myBucket-access --role-name myBucket-iam-role```
+- Create an IAM role and attach a policy that allows s3 read access to the objects in MyBucket (see s3-generic-instance-role.policy) 
+  After Creating the Role Record the Role Instance-Profile ARN name it would be something like:  arn:aws:iam::xxxxxxxxxxxx:instance-profile/RoleName
   
 IAM Role - Admin Instance
 
 - Needless to say that your admin instance needs read/write access to this bucket and permission to launch new instances (see Per Component Requirement)
+  Highly Recommended to lunch the admin instance with an IAM Role that permits all for this demo purpose
 
 *Step 2 - Admin Instance*
 -------------------------
@@ -97,7 +89,7 @@ IAM Role - Admin Instance
   That is if you decided to use IAM Role for the admin instance permissions
 - SSH To the instance : Install aws cli :  sudo -i  , apt-get update && apt-get install -y python-pip && pip install awscli
 - Configure aws cli tools, type: aws configure , provide ak/sk(if used) and the region where the bucket lives
-- Create Boostrap folder: mkdir -p /srv/bootstrap
+- Create Bootstrap folder: mkdir -p /srv/bootstrap
 - From Github project root :  Download admin-instance.tar.gz to /srv/bootstrap , extract the file: tar xvfz admin-instance.tar.gz
 - Edit the newInstance.sh and replace the default bucket name with your bucket name (Do not worry you will create the bucket on the next step)
 - Edit user-data.sh and replace the default bucket name with your bucket name
