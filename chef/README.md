@@ -62,13 +62,13 @@ Start an EC2 Instance and have chef deploy it as an apache webserver:
 
  /newInstance.sh -a ami-423c0a5f -s sg-xxxxxxxx -k xxxxxxxx -i m3.medium -n subnet-xxxxxxxx -m Arn=arn:aws:iam::xxxxxxxxxxxxxxxx:instance-profile/s3-chef-solo -c web
  
- securityGroupID: The bootstrapped instance Security Group Id, See the cloudformation output for the value : ChefSoloInstanceSecurityGroupID
- KeyPairName: Your keypair name, the public part will be pushed to the instance
- InstanceSize: Any instance size
- VPCsubnetID: The VPC Subnet Id to start the instance into, Subnet MUST BE PUBLIC and auto assign public IPs unless you plan to use VPN
- IAM-Instance-Profile: The IAM Role that will be attached to The bootstrapped instance, See the cloudformation output for the value of: ChefSoloInstanceProfileArn
- AMI-ID:  Only ubuntu based AMI's are supported !
- ChefRole: Supported Roles are:  "base" or "web"
+ 1. *securityGroupID*: The bootstrapped instance Security Group Id, See the cloudformation output for the value : ChefSoloInstanceSecurityGroupID
+ 2. *KeyPairName*: Your keypair name, the public part will be pushed to the instance
+ 3. *InstanceSize*: Any instance size
+ 4. *VPCsubnetID*: The VPC Subnet Id to start the instance into, Subnet MUST BE PUBLIC and auto assign public IPs unless you plan to use VPN
+ 5. *IAM-Instance-Profile*: The IAM Role that will be attached to The bootstrapped instance, See the cloudformation output for the value of: ChefSoloInstanceProfileArn
+ 6. *AMI-ID*:  Only ubuntu based AMI's are supported !
+ 7. *ChefRole*: Supported Roles are:  "base" or "web"
 
 - Login to the instance after a few minutes the chef-solo web role should have installed apache2 automatically!, browse to the ec2 instance public ip
 
