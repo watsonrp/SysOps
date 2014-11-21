@@ -1,148 +1,73 @@
 Summary
 =======
-bootstrap your instance automatically with chef-solo, the purpose is to demonstrate to students how *relatively* easy it is to use automation tools such as chef-solo to automate deployments on AWS.
-By all means this mini framework does not "compete" with a fully blown chef-server / OpsWorks frameworks, its sole purpose is to provide a simple yet powerful first step into automating instance deployments
+Bootstrap your instance automatically with chef-solo, The purpose is to demonstrate to students how *relatively* easy it is to use automation tools such as chef-solo to automate deployments on AWS.
+By all means this mini framework does not "compete" with a fully blown chef-server / OpsWorks , Its sole purpose is to provide a simple yet powerful first step into automating instance deployments @AWS Using chef-solo
 
 
 Components
 ==========
 
-* Admin Instance - The instance that will orchestrate the instance deployment
-* Generic EC2 Instance - Simply the instance that will be launched as part of the process
-* Chef-solo - The chef-client that will be executed on every Generic EC2 Instance to deploy the cookbooks / recipes 
-* State Server - Simple S3 Bucket with a pre defined hierarchy, used to manage the state/configuration of the deployed EC2 Instances outside the instance
-* Instance Role/Instance Profile - Used to allow the Generic EC2 instance to make Authenticated API calls to the S3 bucket in order to download/sync chef-solo configurations
-* Cookbooks - Contains the Recipes that will be executed on the bootstrapped instance A collection of Recipes may be referred as cookbooks
+* Admin Instance - The instance that will orchestrate the instance bootstrapping
+* Bootstrapped EC2 Instance - The instance that will be launched as part of the process
+* Chef-solo - The chef-client that will be executed on every Bootstrapped EC2 Instance, Executing cookbooks
+* Artifcats Repo - S3 Bucket that will be created by Cloudformation, Staging the artifcats: Chef Cookbooks , Bootstrap Scripts...
+* Instance Role/Instance Profile - Allow the Bootstrapped EC2 instance to make Authenticated API calls to the S3 bucket 
+* Cookbooks - Contains the Recipes that will be executed on the bootstrapped instance
 
-
-Per Component Requirement
-=========================
-*Admin Instance*
-
-* Ubuntu (Might also work with Linux AMI did not test it)
-* Latest AWS python CLI Tools
-* AWS Python CLI Access Key/Secret Key Configuration at ~/.aws/config , with policy permission that is able (At min) to: Start new instances , Describe new instances, 
-  Pass IAM Role, S3 Put-Objects/Get-Objects to the S3 Bucket that will hold the chef-solo configurations, IAM Role is always better and more secured!
-* Public Access - Since we make calls to S3 we need Internet Access , NAT , Or Public IP ... Your Choice :-)
-* Security Group which will allow Incoming ssh access from your pre-defined IPs  
-
-*Generic EC2 Instance*
-
-* Supported AMI: Ubuntu 14.04 , was not tested on other Linux Platform but can surely fitted into ones ...
-* Instance Profile-->IAM Role - An IAM Role that allows the Generic EC2 Instance to do Authenticated API calls to the S3 Bucket in order to retrieve Configurations that
-  Were Created by the Admin Instance (See Installation Instruction on how-to create) , the Role must be created manually and be assigned to an Instance-Profile ,
-  The Instance Profile Arn (Amazon Resource Name) will be used as an Argument for the Bootstrapping Process
-* Security Group which will allow Incoming ssh access from your pre-defined IPs, As Well as Allow Incoming http to browse the apache2 welcome page  
-
-*Chef-solo*
-
-* No Special Requirements, We use OpsCode's Generic Platform bootstrap script
-
-*S3 Bucket*
-
-* Generic S3 Bucket, Can reside in any region
-* Pre-Defined Hierarchy (See Installation Instructions) 
-
-
-Supported Platforms
-===================
-
-Currently only Ubuntu is supported, but can easily add additional platforms
-
-General Flow
-============
-
-Bootstrap new instance using newInstance.sh --> Based on arguments chef-solo configs are created per instance and pushed to s3 ---> User Data executes bootstrap.sh --> bootstrap.sh create the chef-solo environment and downloads the configs that were generated --> bootstrap.sh calls chef-solo install.sh --> install.sh detects OS and Distro and installs chef-solo client --> eventually bootstrap.sh execute chef-solo and create a cronjob 
 
 Programs
 ========
 
-newInstance.sh - This is a wrapper around the AWS CLI tool, This scripts will start the new AWS Instance, It will take a chef role as an argument and will translate it to a chef run list for the instance by creating custom configurations then, upload them to S3
+newInstance.sh - Once the admin instance is up, this script is will be used to bootstrap EC2 Instances with chef-solo
 
-bootstrap.sh - This is the code that runs on the instance via user-data which will built all the chef-solo environment Including downloading the 
-Generated Configurations and eventually execute chef-solo for the deployment process
+bootstrap.sh - newInstance.sh will inject userdata to The bootstrapped Instance, the userdata will download&execute bootstrap.sh
+               Which in turn will install chef-solo and execute the cookbooks...
 
-solocron.sh - A cron job script that will be executed every 20 minutes and check if there are configuration updates (new cookbooks/new roles...) and download them to the Instance , Then execute chef-solo
+solocron.sh - A cron job script running on The bootstrapped instance (every 20 mins) , the script will track the changes to the chef-solo
+              configurations stored on s3
 
-Installation Instructions
-=========================
+*Step 1 - Create the Demo Environments*
+---------------------------------------
 
-This process is not short :-) , but most of the time should only done once and tweaked as needed
+For the lazy:
 
-*Step 1 - IAM*
---------------
+- Download the chef-solo-admin-instance.json cloudformation template
+- Choose the region you wish to deploy 
+- Use cloudformation to deploy
 
-IAM Role - Bootstrapped Instance
-
-- Create an IAM role and attach a policy that allows s3 read access to the objects in MyBucket (see s3-generic-instance-role.policy) 
-  After Creating the Role Record the Role Instance-Profile ARN name it would be something like:  arn:aws:iam::xxxxxxxxxxxx:instance-profile/RoleName
-  
-IAM Role - Admin Instance
-
-- Needless to say that your admin instance needs read/write access to this bucket and permission to launch new instances (see Per Component Requirement)
-  Highly Recommended to lunch the admin instance with an IAM Role that permits all for this demo purpose
-
-*Step 2 - Admin Instance*
--------------------------
-
-- Launch an ubuntu EC2 AMI (Generic one), I would choose m3.medium for this purpose, MAKE SURE To ASSOCIATE the instance with the appropriated IAM ROLE
-  That is if you decided to use IAM Role for the admin instance permissions
-- SSH To the instance : Install aws cli :  sudo -i  , apt-get update && apt-get install -y python-pip && pip install awscli
-- Configure aws cli tools, type: aws configure , provide ak/sk(if used) and the region where the bucket lives
-- Create Bootstrap folder: mkdir -p /srv/bootstrap
-- From Github project root :  Download admin-instance.tar.gz to /srv/bootstrap , extract the file: tar xvfz admin-instance.tar.gz
-- Edit the newInstance.sh and replace the default bucket name with your bucket name (Do not worry you will create the bucket on the next step)
-- Edit user-data.sh and replace the default bucket name with your bucket name
-- Edit bootstrap.sh and replace the default bucket name with your bucket name as well as the REGION that your s3 bucket lives in 
-- Edit solocron.sh and replace the default bucket name with your bucket name as well as the REGION that your s3 bucket lives in
+The above CFN template will create an Ubuntu Admin Instance, and will stage all artifacts under /home/ubuntu, Just login
+And execute newInstance.sh to bootstrap the ec2 instance with chef-solo (see next step for more details)
 
 
-*step 3 - Create The Artifcats S3 Bucket*
------------------------------------------
+*Step 2 - Bootstrap the Instance*
+---------------------------------
 
-- Create an S3 Bucket with your favorite name, create the below structure and copy from the admin instance/github s3 folder to the appropriate paths:
+****Important: I assume that you launch the instance into a pre-existing VPC , & Into a valid existing PUBLIC SUBNET that automatically assigns public IP
+               to the newly launched instance****
 
-***Important Notice the S3 Bucket Must be Created @ the SAME REGION that you configured above!
-
-```MyBucket---
-          |--cookbook
-                    |--solo-all.tar.gz (To be taken as is from the github s3/ folder)
-                    |--solo-all.tar.gz.md5 (To be taken as is from the github s3/ folder)   
-          |--others
-                  |--install.sh   (Download the latest from here: https://www.opscode.com/chef/install.sh)
-                  |--bootstrap.sh (Upload from the admin instance *After Modifying the Bucket name & Region*
-                  |--solocron.sh (Upload from the admin instance *After Modifying the Bucket name & Region*
-          |--solorb  (Empty "Folder")
-          |--nodejson (Emtpy "Folder")
-          |--roles
-                 |--roles.tar.gz (To be taken as is from the github s3/ folder)
-                 |--roles.tar.gz.md5 (To be taken as is from the github s3/ folder)
-```
-- PERMISSIONS: All bucket Objects can be private, except the others "Folder" , Grant Public Access to all objects
- 			   You could also use an IAM Resource Based Policy for this purpose
-
-
-*Step 4 - Launch An Instance*
------------------------------
-
-****Important: I assume that you launch the instance into a pre-existing VPC , into a valid existing PUBLIC SUBNET that automatically assigned public IP
-               to the newly launched instances****
-
-- On the admin instance
-- Change dir to /srv/bootstrap
-- Execute the newInstance.sh , provide all the needed arguments , for the chef role currently only base and web are supported!
+- Login to the admin instance
+- Change dir to /home/ubuntu
+- As the ubuntu user: execute the newInstance.sh , provide all the needed arguments the script contain detailed usage on the arguments
 
 Usage:
 
-usage: ./newInstance.sh -a AMI-ID -s securityGroupID -k KeyPairName -i InstanceSize -n VPCsubnetID -m IAM-Instance-Profile(Arn=value) -r ChefRole
+usage: ./newInstance.sh -a AMI-ID -s securityGroupID -k KeyPairName -i InstanceSize -n VPCsubnetID -m IAM-Instance-Profile(Arn=value) -c ChefRole
 
 Currently ChefRole can be "base" or "web"
 
 Example:
 
-Start an EC2 Instance and have chef deploy it as a webserver:
+Start an EC2 Instance and have chef deploy it as an apache webserver:
 
- /newInstance.sh -a ami-423c0a5f -s sg-xxxxxxxx -k xxxxxxxx -i m3.medium -n subnet-xxxxxxxx -m Arn=arn:aws:iam::xxxxxxxxxxxxxxxx:instance-profile/s3-chef-solo -r web
+ /newInstance.sh -a ami-423c0a5f -s sg-xxxxxxxx -k xxxxxxxx -i m3.medium -n subnet-xxxxxxxx -m Arn=arn:aws:iam::xxxxxxxxxxxxxxxx:instance-profile/s3-chef-solo -c web
+ 
+ securityGroupID: The bootstrapped instance Security Group Id, See the cloudformation output for the value : ChefSoloInstanceSecurityGroupID
+ KeyPairName: Your keypair name, the public part will be pushed to the instance
+ InstanceSize: Any instance size
+ VPCsubnetID: The VPC Subnet Id to start the instance into, Subnet MUST BE PUBLIC and auto assign public IPs unless you plan to use VPN
+ IAM-Instance-Profile: The IAM Role that will be attached to The bootstrapped instance, See the cloudformation output for the value of: ChefSoloInstanceProfileArn
+ AMI-ID:  Only ubuntu based AMI's are supported !
+ ChefRole: Supported Roles are:  "base" or "web"
 
 - Login to the instance after a few minutes the chef-solo web role should have installed apache2 automatically!, browse to the ec2 instance public ip
 
@@ -157,10 +82,14 @@ Troubleshooting
    bootstrap.sh could not be downloaded from s3 the error will appear here
  - /var/log/bootstrap.log ---> This script will install the chef-client ,create folders  , install AWS CLI...
  - /var/log/solorun.log ---> This logs means that chef-solo has executed , used to troubleshoot cookbook installation issues
+ 
+ Tip: When deploying the CFN Template DISABLE ROLLBACK this will enable you to login to the admin instance and investigate if needed
 
 Author
 ======
 
 Kobi Biton:  kobibito@amazon.lu
+
+Do not hesitate to contact me for feedback / questions
 
 
