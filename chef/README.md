@@ -47,7 +47,8 @@ And execute newInstance.sh to bootstrap the ec2 instance with chef-solo (see nex
 
 - Login to the admin instance
 - Change dir to /home/ubuntu
-- As the ubuntu user: execute the newInstance.sh , provide all the needed arguments the script contain detailed usage on the arguments
+- As the ubuntu user: execute the newInstance.sh , provide all the needed arguments the script.
+  Several Argument Values shall be taken from the cloudformation's stack output (see below for more details)
 
 Usage:
 
