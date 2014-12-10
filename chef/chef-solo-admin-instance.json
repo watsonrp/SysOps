@@ -20,14 +20,23 @@
             "us-east-1": {
                 "64": "ami-9eaa1cf6"
             },
+            "us-west-1": {
+                "64": "ami-076e6542"
+            },
             "us-west-2": {
                 "64": "ami-3d50120d"
             },
 			"eu-central-1": {
 				"64": "ami-b83c0aa5"
 			},
+            "ap-southeast-1": {
+                "64": "ami-d6e7c084"
+            },
             "ap-southeast-2": {
                 "64": "ami-83e08db9"
+            },
+            "sa-east-1": {
+                "64": "ami-69d26774"
             },
             "ap-northest-1": {
                 "64": "ami-e74b60e6"
