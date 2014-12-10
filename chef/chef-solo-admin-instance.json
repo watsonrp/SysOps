@@ -1,6 +1,6 @@
 {
     "AWSTemplateFormatVersion": "2010-09-09",
-    "Description": "Chef-Solo System Operation 2.0 Demo, Admin Instance",
+    "Description": "Chef-Solo System Operation 2.0 Demo, Admin Instance Environment",
     "Mappings": {
         "AWSInstanceType2Arch": {
             "m3.large": {
