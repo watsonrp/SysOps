@@ -69,7 +69,7 @@
             "Type": "String"
         },
         "ArtifcatsS3Bucket": {
-            "Default": "myArtifcatsBucket",
+            "Default": "myartifcatsbucket",
             "Description": "Name of your S3 Bucket that will store the artifacts (CFN will create and populate the bucket)",
             "Type": "String"
         }
