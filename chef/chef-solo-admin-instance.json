@@ -26,14 +26,14 @@
             "us-west-2": {
                 "64": "ami-3d50120d"
             },
-			"eu-central-1": {
-				"64": "ami-b83c0aa5"
-			},
+	    "eu-central-1": {
+		"64": "ami-b83c0aa5"
+	    },
             "ap-southeast-1": {
                 "64": "ami-d6e7c084"
             },
             "ap-southeast-2": {
-                "64": "ami-83e08db9"
+                "64": "ami-abeb9e91"
             },
             "sa-east-1": {
                 "64": "ami-69d26774"
@@ -48,7 +48,7 @@
             "AllowedValues": [
                 "m3.medium",
                 "m3.large",
-				"m3.xlarge"
+		"m3.xlarge"
             ],
             "Default": "m3.medium",
             "Description": "EC2 instance type, e.g. m3.medium",
